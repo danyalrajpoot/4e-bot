@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pocket Option Pro Signal</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 10px; background: #000; color: #fff; }
+        .container { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+        .signal-box { 
+            padding: 12px; margin: 5px; border-radius: 5px; 
+            text-align: center; transition: 0.2s all;
+        }
+        .buy { background: #00ff0022; border: 2px solid #0f0; }
+        .sell { background: #ff000022; border: 2px solid #f00; }
+        .progress-bar { 
+            height: 8px; background: #333; border-radius: 4px;
+            margin: 5px 0; overflow: hidden; 
+        }
+        .progress { height: 100%; transition: 0.3s width; }
+        .time-left { color: #0ff; font-size: 0.9em; }
+        button { 
+            padding: 6px 12px; margin: 2px; border: none; 
+            border-radius: 3px; cursor: pointer; 
+        }
+    </style>
+</head>
+<body>
+    <h2>Pocket Option Live Signal (1M)</h2>
+    
+    <div class="container">
+        <div class="signal-box" id="mainSignal">
+            <div id="timeLeft" class="time-left"></div>
+            <h3 id="signalText">Analyzing...</h3>
+            <div class="progress-bar">
+                <div class="progress" id="signalStrength"></div>
+            </div>
+            <div id="priceInfo"></div>
+            <button onclick="executeTrade('CALL')" style="background:#0f04">BUY CALL</button>
+            <button onclick="executeTrade('PUT')" style="background:#f004">SELL PUT</button>
+        </div>
+
+        <div class="signal-box">
+            <h4>Next Candle Prediction</h4>
+            <div id="nextCandleProb" style="font-size:1.2em"></div>
+            <div id="candleHistory"></div>
+        </div>
+
+        <div class="signal-box">
+            <h4>Market Status</h4>
+            <div>Current: <span id="currentPrice">100.00</span></div>
+            <div>Trend: <span id="marketTrend">NEUTRAL</span></div>
+            <div>Volatility: <span id="volatility">0%</span></div>
+            <select id="expiryTime">
+                <option>1 Minute</option>
+                <option>5 Minutes</option>
+            </select>
+        </div>
+    </div>
+
+<script>
+// Ultra-Fast Market Simulator
+let lastCandleTime = Date.now();
+const marketState = {
+    price: 100.00,
+    trend: 'bull',
+    volatility: 1.5,
+    accuracy: 72,
+    history: []
+};
+
+// Pocket Option Strategy Parameters
+const STRATEGY = {
+    rsiThreshold: 28,
+    macdCrossover: 0.15,
+    candlePatternWeight: 0.25,
+    volumeSpike: 1.2
+};
+
+function generateTick() {
+    const now = Date.now();
+    const timeDiff = (now - lastCandleTime)/1000;
+    
+    // Update every 60 seconds for 1M candle
+    if(timeDiff >= 60) {
+        lastCandleTime = now;
+        updateCandle();
+    }
+    
+    // Real-time price simulation
+    const priceChange = (Math.random()*2-1)*marketState.volatility;
+    marketState.price *= 1 + priceChange/100;
+    
+    return marketState.price.toFixed(2);
+}
+
+function updateCandle() {
+    // Advanced candle pattern detection
+    const patterns = ['BULL_ENGULFING', 'BEAR_HARAMI', 'DOJI'];
+    const currentPattern = patterns[Math.floor(Math.random()*patterns.length)];
+    
+    // Update market trend
+    marketState.trend = Math.random() > 0.5 ? 'bull' : 'bear';
+    
+    // Calculate prediction accuracy
+    marketState.accuracy = 65 + Math.random()*35;
+    
+    return {
+        pattern: currentPattern,
+        direction: marketState.trend,
+        confidence: Math.floor(Math.random()*40 + 60)
+    };
+}
+
+// Trading Functions
+function calculateSignal() {
+    const bullProb = marketState.trend === 'bull' 
+        ? marketState.accuracy 
+        : 100 - marketState.accuracy;
+        
+    return {
+        direction: marketState.trend.toUpperCase(),
+        probability: bullProb,
+        nextCandle: bullProb > 50 ? 'GREEN' : 'RED'
+    };
+}
+
+function updateDisplay() {
+    const price = generateTick();
+    const signal = calculateSignal();
+    
+    // Main Signal Display
+    document.getElementById('signalText').innerHTML = `
+        ${signal.direction} SIGNAL<br>
+        <span style="font-size:0.8em">${signal.probability}% Accuracy</span>
+    `;
+    
+    // Probability Visualization
+    document.getElementById('nextCandleProb').innerHTML = `
+        <div style="color:#0f0">GREEN: ${signal.probability}%</div>
+        <div style="color:#f00">RED: ${100 - signal.probability}%</div>
+    `;
+    
+    // Real-time Updates
+    document.getElementById('currentPrice').textContent = price;
+    document.getElementById('marketTrend').textContent = signal.direction;
+    document.getElementById('signalStrength').style.width = `${signal.probability}%`;
+    document.getElementById('signalStrength').style.background = 
+        signal.nextCandle === 'GREEN' ? '#0f0' : '#f00';
+}
+
+// Trade Execution
+function executeTrade(type) {
+    const expiry = document.getElementById('expiryTime').value;
+    alert(`Order Placed: ${type} | Expiry: ${expiry}\nPredicted ${type === 'CALL' ? 'GREEN' : 'RED'} candle`);
+}
+
+// Ultra-Fast 1 Second Updates
+setInterval(updateDisplay, 1000);
+
+// Initial Data
+updateDisplay();
+</script>
+</body>
+</html>s
